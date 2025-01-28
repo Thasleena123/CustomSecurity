@@ -12,11 +12,12 @@ public class CustomToken {
         long timestamp = System.currentTimeMillis();
         String payload=username+"|"+department+"|"+timestamp;
         String signature=hashWithSHA256(payload+SECRET_KEY);
-        return  payload+"|"+signature;
+        return  Base64.getEncoder().encodeToString((payload+"|"+signature).getBytes());
     }
 
     public  static  boolean validateToken(String token) {
-        String[] parts = token.split("\\|");
+        String decodedToken = new String(Base64.getDecoder().decode(token.getBytes()));
+        String[] parts = decodedToken.split("\\|");
         if (parts.length != 4) {
             return false;
         }
@@ -26,12 +27,14 @@ public class CustomToken {
         return providedSignature.equals(expectedSignature);
     }
     public static String extractDepartment(String token) {
-        return token.split("\\|")[1];
+        String decodedToken = new String(Base64.getDecoder().decode(token.getBytes()));
+        return decodedToken.split("\\|")[1];
     }
     public static long extractTimestamp(String token) {
-        return Long.parseLong(token.split("\\|")[2]);
+        String decodedToken = new String(Base64.getDecoder().decode(token.getBytes()));
+        return Long.parseLong(decodedToken.split("\\|")[2]);
     }
-    private static String hashWithSHA256(String data) {
+    public static String hashWithSHA256(String data) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(data.getBytes(StandardCharsets.UTF_8));
